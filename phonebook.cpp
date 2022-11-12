@@ -13,7 +13,7 @@ std::string username = "root";
 std::string password = "Xp0Sls6KjpyY7AvW#Zx1";
 Session* mySession = nullptr;
 
-struct userData {
+struct User{
     std::string firstname;
     std::string lastname;
     std::string username;
@@ -41,25 +41,98 @@ void connectToDatabase() {
     }
 }
 
-
-void addUser() {
+void setFirstNameFromUser(struct User& user) {
+    std::string tempFirstName;
     while (true) {
         std::cout << "Enter First Name: ";
-        std::getline(std::cin, firstname);
-        std::cout << "Your first name is " << firstname << std::endl;
+        std::getline(std::cin, tempFirstName);
 
+        if (tempFirstName.size() > 50) {
+            std::cout << "Maximum characters exceeded. Try again." << std::endl;
+        }
+        else {
+            user.firstname = tempFirstName;
+            break;
+        }
+    }    
+}
+
+void setLastNameFromUser(struct User& user) {
+    std::string tempLastName;
+    while (true) {
         std::cout << "Enter last Name: ";
-        std::getline(std::cin, lastname);
-        std::cout << "Your last name is " << lastname << std::endl;
+        std::getline(std::cin, tempLastName);
+
+        if (tempLastName.size() > 50) {
+            std::cout << "Maximum characters exceeded. Try again." << std::endl;
+        }
+        else {
+            user.lastname = tempLastName;
+            break;
+        }
+    }
+}
+
+void setUsernameFromUser(struct User& user) {
+    std::string tempUsername;
+    while (true) {
+        std::cout << "Enter username: ";
+        std::getline(std::cin, tempUsername);
+
+        if (tempUsername.size() <= 50) {
+            auto result = mySession->sql("SELECT * FROM user WHERE username = '" + tempUsername + "'").execute();
+            if (result.hasData()) {
+                std::string errorMessage = "'" + tempUsername + "' is already in use. Pick another user name.";
+                std::cout << errorMessage << std::endl;
+            }
+            else {
+                user.username = tempUsername;
+                break;
+            }
+        }
+        else {
+            std::cout << "Maximum characters exceeded. Try again." << std::endl;
+        }      
+    }
+}
+
+void setUserPassword(struct User& user) {
+    std::string tempPassword;
+
+    while (true) {
+        std::cout << "Enter password: ";
+        std::getline(std::cin, tempPassword);
+
+        if (tempPassword.size() <= 20) {
+            user.password = tempPassword;
+        }
+        else {
+            std::cout << "Maximum characters exceeded. Try again." << std::endl;
+        }
+    }
+}
+
+void setUserEmail(struct User& user) {
+    std::string tempEmailAddr;
+    
+    while (true) {
+        //Check if email length is too long
+        //Check if it entry has the correct properties of an email address
+        //It should say @something.com
+    }
+}
+
+void addUser(struct User& user) {
+    while (true) {
+        setFirstNameFromUser(user);
+        setLastNameFromUser(user);
+        setUsernameFromUser(user);
+        setUserPassword(user);
 
         //TODO: Add username validation logic. Must be unique.
-        std::cout << "Enter username: ";
-        std::getline(std::cin, username);
-        std::cout << "Your username is " << username << std::endl;
+        
 
-        std::cout << "Enter password: ";
-        std::getline(std::cin, password);
-        std::cout << "Your password is " << password << std::endl;
+        
 
         break;
     }
@@ -100,6 +173,7 @@ int main()
 
     std::string mainInput;
     std::string username;
+    struct User user;
 
 
     while (true) {
@@ -110,7 +184,7 @@ int main()
 
         if (mainInput != "exit") {
             if (mainInput == "1") {
-                addUser();
+                addUser(user);
             }
             else if (mainInput == "2") {
                 searchDatabaseForUser();
