@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <stack>
 #include <mysqlx/xdevapi.h>
 #include <vector>
 
@@ -112,13 +113,43 @@ void setUserPassword(struct User& user) {
     }
 }
 
+bool emailIsValid(std::string& email) {
+    if (!(email.at(0) >= 65 && email.at(0) <= 90) ||
+        !(email.at(0) >= 97 && email.at(0) <= 122)) {
+        return false;
+    }
+
+    std::stack<char> validEmailPattern;
+    validEmailPattern.push('.');
+    validEmailPattern.push('@');
+    int numChars = 0;
+
+    for (int i = 0; i < email.size(); i++) {
+        if (email.at(i) == '@') {
+            if (numChars > 0) {
+                validEmailPattern.pop();
+            }
+        }
+
+        if (dots >= 2) {
+            return false;
+        }
+    }
+}
+
 void setUserEmail(struct User& user) {
     std::string tempEmailAddr;
-    
     while (true) {
         //Check if email length is too long
-        //Check if it entry has the correct properties of an email address
-        //It should say @something.com
+        if (tempEmailAddr.size() > 50) {
+            std::cout << "Maximum characters exceeded. Try again." << std::endl;
+        }
+        
+        for(int i = temp)
+        // The email address must start with a letter (no numbers or symbols). (65 - 90 && 97 - 122)
+        // There must be an @ somewhere in the string that is located before the dot.
+        // There must be text after the @ symbol but before the dot.
+        // There must be a dota nd text after the dot.
     }
 }
 
