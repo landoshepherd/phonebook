@@ -82,7 +82,8 @@ void setUsernameFromUser(struct User& user) {
 
         if (tempUsername.size() <= 50) {
             auto result = mySession->sql("SELECT * FROM user WHERE username = '" + tempUsername + "'").execute();
-            if (result.hasData()) {
+            bool userFound = result.fetchOne().isNull();
+            if (!userFound) {
                 std::string errorMessage = "'" + tempUsername + "' is already in use. Pick another user name.";
                 std::cout << errorMessage << std::endl;
             }
@@ -106,6 +107,7 @@ void setUserPassword(struct User& user) {
 
         if (tempPassword.size() <= 20) {
             user.password = tempPassword;
+            break;
         }
         else {
             std::cout << "Maximum characters exceeded. Try again." << std::endl;
@@ -113,63 +115,82 @@ void setUserPassword(struct User& user) {
     }
 }
 
-bool emailIsValid(std::string& email) {
-    if (!(email.at(0) >= 65 && email.at(0) <= 90) ||
-        !(email.at(0) >= 97 && email.at(0) <= 122)) {
+bool emailIsValid(const std::string& email) {
+    // Check if first character is a letter
+    if ((tolower(email.at(0)) < 97 || tolower(email.at(0)) > 122)) {
         return false;
     }
 
-    std::stack<char> validEmailPattern;
-    validEmailPattern.push('.');
-    validEmailPattern.push('@');
-    int numChars = 0;
+    // Last character has to be a letter
+    if (email.at(email.size()-1) < 97 || email.at(email.size()-1) > 122) {
+        return false;
+    }
+
+    int atCount = 0;
+    int dotIdx = 0;
+    int charCount = 0;
 
     for (int i = 0; i < email.size(); i++) {
         if (email.at(i) == '@') {
-            if (numChars > 0) {
-                validEmailPattern.pop();
+            atCount++;
+            if (atCount > 1) {
+                return false;
             }
         }
-
-        if (dots >= 2) {
-            return false;
+        else if (email.at(i) == '.') {
+            if (email.at(i - 1) == '.') {
+                return false;
+            }
+            dotIdx = i;
         }
     }
+
+    if ((email.size() - 1) - dotIdx < 2)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void setUserEmail(struct User& user) {
     std::string tempEmailAddr;
     while (true) {
+        std::cout << "Enter email: ";
+        std::getline(std::cin, tempEmailAddr);
         //Check if email length is too long
-        if (tempEmailAddr.size() > 50) {
+        if (tempEmailAddr.size() > 260) {
             std::cout << "Maximum characters exceeded. Try again." << std::endl;
         }
-        
-        for(int i = temp)
-        // The email address must start with a letter (no numbers or symbols). (65 - 90 && 97 - 122)
-        // There must be an @ somewhere in the string that is located before the dot.
-        // There must be text after the @ symbol but before the dot.
-        // There must be a dota nd text after the dot.
+        else if (emailIsValid(tempEmailAddr)) {
+            user.emailAddr = tempEmailAddr;
+            break;
+        }
+        else {
+            std::cout << "Invalid email address. Try again." << std::endl;
+        }       
     }
 }
 
 void addUser(struct User& user) {
-    while (true) {
-        setFirstNameFromUser(user);
-        setLastNameFromUser(user);
-        setUsernameFromUser(user);
-        setUserPassword(user);
 
-        //TODO: Add username validation logic. Must be unique.
-        
+    setFirstNameFromUser(user);
+    setLastNameFromUser(user);
+    setUsernameFromUser(user);
+    setUserPassword(user);
+    setUserEmail(user);
 
-        
 
-        break;
-    }
 
-    std::string insertUserQuery = "INSERT INTO users(first_name, last_name, username, password) VALUES ('" + firstname + "', '" + lastname + "', '" + username + "', '" + password + "')";
+    std::string insertUserQuery = "INSERT INTO user(first_name, last_name, username, user_password, email_address) VALUES ('";
+    insertUserQuery.append(user.firstname + "', '");
+    insertUserQuery.append(user.lastname + "', '");
+    insertUserQuery.append(user.username + "', '");
+    insertUserQuery.append(user.password + "', '");
+    insertUserQuery.append(user.emailAddr + "')");
     mySession->sql(insertUserQuery).execute();
+
+    std::cout << "Successfully added user: " + user.firstname + " " + user.lastname + " to the database." << std::endl;
 }
 
 void searchDatabaseForUser() {
