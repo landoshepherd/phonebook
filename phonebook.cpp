@@ -193,18 +193,23 @@ void addUser(struct User& user) {
     std::cout << "Successfully added user: " + user.firstname + " " + user.lastname + " to the database." << std::endl;
 }
 
-void searchDatabaseForUser() {
-    std::string username;
-    std::cout << "Enter username: ";
-    //Validate!
-    std::getline(std::cin, username);
+void searchDatabaseForUser(const std::string& searchName, const std::string& searchBy) {
     try {
-        auto myResult = mySession->sql("SELECT first_name, last_name FROM users WHERE username = '" + username + "'").execute();
+        SqlResult myResult;
+        if (searchBy == "1") {
+            myResult = mySession->sql("SELECT * FROM user WHERE first_name = '" + searchName + "'").execute();
+        }
+        else {
+            myResult = mySession->sql("SELECT * FROM user WHERE last_name = '" + searchName + "'").execute();
+        }
+        
         if (myResult.hasData()) {
-            Row user = myResult.fetchOne();
-            std::cout << "Row Count: " << user.colCount() << std::endl;
-            std::cout << "First Name: " << user.get(0) << std::endl;
-            std::cout << "Last Name: " << user.get(1) << std::endl;
+            std::list<Row> users = myResult.fetchAll();
+            for (auto iter = users.begin(); iter != users.end(); iter++) {               
+                std::cout << "Name: " << iter->get(1) << " " << iter->get(2) << "\n";
+                std::cout << "Email: " << iter->get(5) << "\n";
+                std::cout << std::endl;
+            }                      
         }
         else {
             std::cout << "User not found" << std::endl;
@@ -239,7 +244,29 @@ int main()
                 addUser(user);
             }
             else if (mainInput == "2") {
-                searchDatabaseForUser();
+                std::string searchBy;
+                while (true) {
+                    std::cout << "[1] Search by first name" << std::endl;
+                    std::cout << "[2] Search by last name" << std::endl;
+                    std::getline(std::cin, searchBy);
+
+                    if (searchBy.length() == 1 && std::stoi(searchBy) == 1 || std::stoi(searchBy) == 2) {
+                        std::string searchName;
+                        if (searchBy == "1") {
+                            std::cout << "Enter first name: ";                            
+                        }
+                        else {
+                            std::cout << "Enter last name: ";
+                        }
+
+                        std::getline(std::cin, searchName);
+                        searchDatabaseForUser(searchName, searchBy);
+                    }
+                    else {
+                        // Try again
+                        std::cout << "Invalid entry. Try again." << std::endl;
+                    }
+                }              
             }
             else {
                 std::cout << "Invalid Entry." << std::endl;
